@@ -14,12 +14,19 @@ with node --check. Upstream source paths refer to the microsoft/playwright monor
   so concurrent clients never block each other. Throwaway dirs are swept when older than 5 minutes and unlocked, and
   removed at process exit. Acceptance tests 1, 2, 5.
 
+## Browser launch timeout
+- op: browserFactory-launch-timeout
+- upstream: packages/playwright-core/src/tools/browserFactory.ts
+- launchPersistentContext gets an explicit timeout (env PLAYWRIGHT_MCP_LAUNCH_TIMEOUT_MS, default 60000 ms) so a
+  hung Chrome startup rejects instead of blocking the session forever.
+
 ## Tool-call watchdog
 - op: server-calltool-watchdog
 - upstream: packages/playwright-core/src/tools/server.ts
-- The whole tool call races a wall-clock watchdog (env PLAYWRIGHT_MCP_TOOL_TIMEOUT_MS, default 110000 ms, just under
-  the client-side 120 s). On expiry the backend is disposed (browser closed, profile released) so the next call starts
-  fresh, and a structured tool_timeout error is returned. Acceptance test 1.
+- The whole tool call, INCLUDING lazy browser initialization, races a wall-clock watchdog (env
+  PLAYWRIGHT_MCP_TOOL_TIMEOUT_MS, default 110000 ms, under the client-side 120 s). On expiry the backend is disposed
+  (browser closed, profile released), backendPromise is cleared so the next call starts fresh, and a structured
+  tool_timeout error is returned. Acceptance test 1.
 
 ## Structured error surface
 - ops: backend-error-helpers, backend-messages-meta
